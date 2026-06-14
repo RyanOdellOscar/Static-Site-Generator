@@ -2,12 +2,15 @@ from textnode import TextNode, TextType
 import os
 import shutil
 from blocks import markdown_to_html_node
+import sys
+#In main.py use the sys.argv to grab the first CLI argument to the program. Save it as the basepath. If one isn't provided, default to /.
+basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
 print('hello world')
 #Write a recursive function that copies all the contents from a source directory to a destination directory (in our case, static to public)
 #It should first delete all the contents of the destination directory (public) to ensure that the copy is clean.
 #It should copy all files and subdirectories, nested files, etc.
 #I recommend logging the path of each file you copy, so you can see what's happening as you run and debug your code.
-public_dir = "public"
+public_dir = "docs"
 
 def delete_contents(directory):
     for item in os.listdir(directory):
@@ -54,6 +57,8 @@ def generate_page(from_path, template_path, dest_path):
         .replace("{{content}}", md_html)
         .replace("{{ Content }}", md_html)
         .replace("{{Content}}", md_html)
+        .replace('href="/', 'href="{basepath}')
+        .replace('src="/', 'src="{basepath}')
     )
         dest_dir = os.path.dirname(dest_path)
         if dest_dir:
@@ -81,7 +86,7 @@ def main():
     if not os.path.exists(public_dir):
         os.mkdir(public_dir)
     copy_contents("static", public_dir)
-    generate_pages_recursive("content", "template.html", "public")
+    generate_pages_recursive(basepath, "template.html", public_dir)
 
 
 main()
