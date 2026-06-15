@@ -3,13 +3,10 @@ import os
 import shutil
 from blocks import markdown_to_html_node
 import sys
-#In main.py use the sys.argv to grab the first CLI argument to the program. Save it as the basepath. If one isn't provided, default to /.
+
 basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
 print('hello world')
 #Write a recursive function that copies all the contents from a source directory to a destination directory (in our case, static to public)
-#It should first delete all the contents of the destination directory (public) to ensure that the copy is clean.
-#It should copy all files and subdirectories, nested files, etc.
-#I recommend logging the path of each file you copy, so you can see what's happening as you run and debug your code.
 public_dir = "docs"
 
 def delete_contents(directory):
@@ -42,7 +39,7 @@ def extract_title(markdown):
             return line.lstrip("#").strip()
     raise Exception("no header found")
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     with open(from_path, "r") as f:
         md = f.read()
@@ -57,26 +54,26 @@ def generate_page(from_path, template_path, dest_path):
         .replace("{{content}}", md_html)
         .replace("{{ Content }}", md_html)
         .replace("{{Content}}", md_html)
-        .replace('href="/', 'href="{basepath}')
-        .replace('src="/', 'src="{basepath}')
+        .replace('href="/', f'href="{basepath}')
+        .replace('src="/', f'src="{basepath}')
     )
-        dest_dir = os.path.dirname(dest_path)
-        if dest_dir:
-            os.makedirs(dest_dir, exist_ok=True)
+    dest_dir = os.path.dirname(dest_path)
+    if dest_dir:
+        os.makedirs(dest_dir, exist_ok=True)
     with open(dest_path, "w") as f:
         f.write(page_html)
     
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     for item in os.listdir(dir_path_content):
         item_path = os.path.join(dir_path_content, item)
         dest_path = os.path.join(dest_dir_path, item)
-            if os.path.isfile(item_path):
-                if item.endswith(".md"):
-                    dest_path = os.path.splitext(dest_path)[0] + ".html"
-                    generate_page(item_path, template_path, dest_path)
+        if os.path.isfile(item_path):
+            if item.endswith(".md"):
+                dest_path = os.path.splitext(dest_path)[0] + ".html"
+                generate_page(item_path, template_path, dest_path, basepath)
         elif os.path.isdir(item_path):
             os.mkdir(dest_path)
-            generate_pages_recursive(item_path, template_path, dest_path)
+            generate_pages_recursive(item_path, template_path, dest_path, basepath)
         else:
             raise Exception("unknown path")
 
@@ -86,7 +83,7 @@ def main():
     if not os.path.exists(public_dir):
         os.mkdir(public_dir)
     copy_contents("static", public_dir)
-    generate_pages_recursive(basepath, "template.html", public_dir)
+    generate_pages_recursive("content", "template.html", public_dir, basepath)
 
 
 main()
